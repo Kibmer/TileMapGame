@@ -26,6 +26,8 @@ private:
 	ID3D11DeviceContext* _d3dDeviceContext;
 	
 	IDXGISwapChain* _swapChain;
+
+	ID3D11RenderTargetView* _renderTargetView;
 	
 	UINT _4xMsaaQuallity;
 	

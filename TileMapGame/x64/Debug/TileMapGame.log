@@ -1,0 +1,7 @@
+﻿GameSystem.obj : error LNK2019: D3D11CreateDevice 외부 기호(참조 위치: "public: bool __cdecl GameSystem::InitDirect3D(void)" (?InitDirect3D@GameSystem@@QEAA_NXZ) 함수)에서 확인하지 못했습니다.
+d3d11.lib : warning LNK4272: 'X86' 라이브러리 컴퓨터 종류가 'x64' 대상 컴퓨터 종류와 충돌합니다.
+dxguid.lib : warning LNK4272: 'X86' 라이브러리 컴퓨터 종류가 'x64' 대상 컴퓨터 종류와 충돌합니다.
+dxgi.lib : warning LNK4272: 'X86' 라이브러리 컴퓨터 종류가 'x64' 대상 컴퓨터 종류와 충돌합니다.
+dxerr.lib : warning LNK4272: 'X86' 라이브러리 컴퓨터 종류가 'x64' 대상 컴퓨터 종류와 충돌합니다.
+d3dx11d.lib : warning LNK4272: 'X86' 라이브러리 컴퓨터 종류가 'x64' 대상 컴퓨터 종류와 충돌합니다.
+C:\Users\atents\Desktop\TileMapGame\TileMapGame\x64\Debug\TileMapGame.exe : fatal error LNK1120: 1개의 확인할 수 없는 외부 참조입니다.

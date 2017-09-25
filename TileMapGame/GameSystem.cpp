@@ -35,6 +35,9 @@ GameSystem::~GameSystem(){
 
 	_d3dDevice->Release();
 	_d3dDevice = 0;
+
+	_renderTargetView->Release();
+	_renderTargetView = 0;
 }
 
 // Singleton
@@ -195,6 +198,43 @@ bool GameSystem::InitDirect3D() {
 
 	dxgiFactory->Release();
 	dxgiFactory = 0;
+
+	// 05. 교환 사슬의 후면 버퍼에 대한 렌더 대상 뷰 생성
+
+	ID3D11Texture2D* backBuffer;
+	hr = _swapChain->GetBuffer(
+		0, // 얻고자 하는 백버퍼의 인덱스
+		__uuidof(ID3D11Texture2D),
+		reinterpret_cast<void**>(&backBuffer)
+	);
+	if (FAILED(hr)) {
+		MessageBox(0, L"backBuffer getIndex Failed", 0, 0);
+		return false;
+	}
+
+
+	// 뷰를 만들어 줌
+	hr = _d3dDevice->CreateRenderTargetView(
+		backBuffer,
+		0,
+		&_renderTargetView
+	);
+
+	backBuffer->Release();
+	backBuffer = 0;
+
+	// 06. 깊이.스텐실 버퍼와 그에 연결되는 스텐실 뷰 생성
+
+	D3D11_TEXTURE2D_DESC depthStencilDesc;
+	depthStencilDesc.Width = 1280;
+	depthStencilDesc.Height = 800;
+	depthStencilDesc.MipLevels = 1;	// 밉맵의 수준
+	depthStencilDesc.ArraySize = 1;
+	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	// 07. 렌더 대상 뷰와 깊이. 스텐실 뷰를 Direct3D가 사용할 수 있도록 렌더링 파이프라인
+
+	// 08. 뷰포트 설정
 
 	return false;
 }
