@@ -24,6 +24,11 @@ public:
 private:
 	ID3D11Device* _d3dDevice;
 	ID3D11DeviceContext* _d3dDeviceContext;
+	
+	IDXGISwapChain* _swapChain;
+	
 	UINT _4xMsaaQuallity;
+	
 	bool _isEnable4xMsaa;
+	HWND _hMainWnd;
 };

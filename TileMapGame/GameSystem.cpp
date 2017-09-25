@@ -27,7 +27,14 @@ GameSystem::GameSystem(){
 }
 
 GameSystem::~GameSystem(){
+	_swapChain->Release();
+	_swapChain = 0;
 
+	_d3dDeviceContext->Release();
+	_d3dDeviceContext = 0;
+
+	_d3dDevice->Release();
+	_d3dDevice = 0;
 }
 
 // Singleton
@@ -56,10 +63,10 @@ bool GameSystem::InitSystem(HINSTANCE hInstance, int nCmdShow) {
 		return false;
 	}
 
-	HWND hWnd = CreateWindow(L"Base", L"Title", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
+	_hMainWnd = CreateWindow(L"Base", L"Title", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
 
-	ShowWindow(hWnd, nCmdShow);
-	UpdateWindow(hWnd);
+	ShowWindow(_hMainWnd, nCmdShow);
+	UpdateWindow(_hMainWnd);
 
 	return true;
 }
@@ -134,6 +141,7 @@ bool GameSystem::InitDirect3D() {
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	
 	if (_isEnable4xMsaa) {
 		sd.SampleDesc.Count = 4;
 		sd.SampleDesc.Quality = _4xMsaaQuallity - 1;
@@ -142,6 +150,51 @@ bool GameSystem::InitDirect3D() {
 		sd.SampleDesc.Count = 1;
 		sd.SampleDesc.Quality = 0;
 	}
+
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // 버퍼의 용도를 서술하는 구조체, 버퍼를 랜더를 대상으로 
+	sd.BufferCount = 1; // 교환 사슬에서 사용할 후면 버퍼의 갯수, 더블 버퍼링에서는 하나만 사용. 트리플 버퍼
+	sd.OutputWindow = _hMainWnd; // 렌더링 결과를 표시할 창의 핸들
+	sd.Windowed = true; // 윈도우 모드/전체 모드
+	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // 교환 효과 지정, 현제 가장 효율적인 방법을 선택하도록 지정
+	sd.Flags = 0;
+
+	// 04. IDXGISwapChain 인스턴스 생성 (교환 사슬 인스턴스(후면버퍼))
+
+	IDXGISwapChain* dxgiDevice = 0;
+	hr = _d3dDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
+	if (FAILED(hr)) {
+		MessageBox(0, L"IDXGIDevice Failed", 0, 0);
+		return false;
+	}
+
+	IDXGIAdapter* dxgiAdapter = 0;
+	hr = dxgiAdapter->GetParent(__uuidof(IDXGIAdapter), (void**)&dxgiDevice);
+	if (FAILED(hr)) {
+		MessageBox(0, L"IDXGIAdapter Failed", 0, 0);
+		return false;
+	}
+
+	IDXGIFactory* dxgiFactory = 0;
+	hr = dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
+	if (FAILED(hr)) {
+		MessageBox(0, L"IDXGIFactory Failed", 0, 0);
+		return false;
+	}
+
+	hr = dxgiFactory->CreateSwapChain(_d3dDevice, &sd, &_swapChain);
+	if (FAILED(hr)) {
+		MessageBox(0, L"CreateSwapChain Failed", 0, 0);
+		return false;
+	}
+
+	dxgiDevice->Release();
+	dxgiDevice = 0;
+
+	dxgiAdapter->Release();
+	dxgiAdapter = 0;
+
+	dxgiFactory->Release();
+	dxgiFactory = 0;
 
 	return false;
 }
