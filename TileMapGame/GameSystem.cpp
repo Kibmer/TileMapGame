@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "GameSystem.h"
 
 // 첫번째 윈도우 핸들은 현제 나의 윈도우의 핸들이 넘어 오지 않을때가 있다.
@@ -24,7 +23,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lparam) {
 GameSystem* GameSystem::_instance = NULL;
 
 GameSystem::GameSystem(){
-
+	_isEnable4xMsaa = false;
 }
 
 GameSystem::~GameSystem(){
@@ -93,4 +92,56 @@ int GameSystem::Update() {
 		}
 	}
 	return (int)msg.wParam; //문제가 있는지 없는지를 메세지에서 받는다.
+}
+
+bool GameSystem::InitDirect3D() {
+	D3D_FEATURE_LEVEL featureLevel;
+
+	HRESULT hr = D3D11CreateDevice(
+		0,
+		D3D_DRIVER_TYPE_HARDWARE,
+		0,
+		D3D11_CREATE_DEVICE_DEBUG,
+		0, 
+		0,
+		D3D11_SDK_VERSION,
+		&_d3dDevice,
+		&featureLevel,
+		&_d3dDeviceContext
+	);
+
+	if (FAILED(hr)) {
+		MessageBox(0, L"지원하지 않는 하드웨어", L"Error", MB_OK);
+		return false;
+	}
+
+	hr = _d3dDevice->CheckMultisampleQualityLevels(
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		4,
+		&_4xMsaaQuallity
+	);
+
+	if (FAILED(hr)) {
+		MessageBox(0, L"지원하지 않는 하드웨어", L"Error", MB_OK);
+		return false;
+	}
+
+	DXGI_SWAP_CHAIN_DESC sd;
+	sd.BufferDesc.Width = 1280;
+	sd.BufferDesc.Height = 800;
+	sd.BufferDesc.RefreshRate.Numerator = 60;
+	sd.BufferDesc.RefreshRate.Denominator = 1;
+	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	if (_isEnable4xMsaa) {
+		sd.SampleDesc.Count = 4;
+		sd.SampleDesc.Quality = _4xMsaaQuallity - 1;
+	}
+	else {
+		sd.SampleDesc.Count = 1;
+		sd.SampleDesc.Quality = 0;
+	}
+
+	return false;
 }
