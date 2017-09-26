@@ -29,6 +29,11 @@ private:
 
 	ID3D11RenderTargetView* _renderTargetView;
 	
+	ID3D11Texture2D* _depthStencilBuffer;
+	ID3D11DepthStencilView* _depthStencilView;
+	
+	D3D11_VIEWPORT _screenViewport;
+
 	UINT _4xMsaaQuallity;
 	
 	bool _isEnable4xMsaa;

@@ -38,6 +38,12 @@ GameSystem::~GameSystem(){
 
 	_renderTargetView->Release();
 	_renderTargetView = 0;
+
+	_depthStencilBuffer->Release();
+	_depthStencilBuffer = 0;
+
+	_depthStencilView->Release();
+	_depthStencilView = 0;
 }
 
 // Singleton
@@ -71,6 +77,9 @@ bool GameSystem::InitSystem(HINSTANCE hInstance, int nCmdShow) {
 	ShowWindow(_hMainWnd, nCmdShow);
 	UpdateWindow(_hMainWnd);
 
+	if (false == InitDirect3D())
+		return false;
+
 	return true;
 }
 
@@ -99,6 +108,17 @@ int GameSystem::Update() {
 		else {
 			//게임 처리
 
+			float color[4];
+			color[0] = 0.0f; //red
+			color[1] = 0.0f; //green
+			color[2] = 1.0f; //blue
+			color[3] = 1.0f; //alpha
+
+			_d3dDeviceContext->ClearRenderTargetView(_renderTargetView, color);
+			_d3dDeviceContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+			// todo : 게임 관련된 드로우
+			_swapChain->Present(0, 0);
 		}
 	}
 	return (int)msg.wParam; //문제가 있는지 없는지를 메세지에서 받는다.
@@ -171,7 +191,7 @@ bool GameSystem::InitDirect3D() {
 	}
 
 	IDXGIAdapter* dxgiAdapter = 0;
-	hr = dxgiAdapter->GetParent(__uuidof(IDXGIAdapter), (void**)&dxgiDevice);
+	hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)&dxgiAdapter);
 	if (FAILED(hr)) {
 		MessageBox(0, L"IDXGIAdapter Failed", 0, 0);
 		return false;
@@ -232,9 +252,46 @@ bool GameSystem::InitDirect3D() {
 	depthStencilDesc.ArraySize = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	// 07. 렌더 대상 뷰와 깊이. 스텐실 뷰를 Direct3D가 사용할 수 있도록 렌더링 파이프라인
+	if (_isEnable4xMsaa) {
+		depthStencilDesc.SampleDesc.Count = 4;
+		depthStencilDesc.SampleDesc.Quality = _4xMsaaQuallity;
+	}
+	else {
+		depthStencilDesc.SampleDesc.Count = 1;
+		depthStencilDesc.SampleDesc.Quality = 0;
+	}
+
+	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT; 
+	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.CPUAccessFlags = 0; //CPU에 접근 하는것을 관여
+	depthStencilDesc.MiscFlags = 0;
+
+	hr = _d3dDevice->CreateTexture2D(&depthStencilDesc, 0, &_depthStencilBuffer);
+	if (FAILED(hr)) {
+		MessageBox(0, L"CreateTexture2D Failed", 0, 0);
+		return false;
+	}
+
+	hr = _d3dDevice->CreateDepthStencilView(_depthStencilBuffer, 0, &_depthStencilView);
+	if (FAILED(hr)) {
+		MessageBox(0, L"CreateDepthStencilView Failed", 0, 0);
+		return false;
+	}
+
+	// 07. 렌더 대상 뷰와 깊이. 스텐실 뷰를 Direct3D가 사용할 수 있도록 렌더링 파이프라인의 출력 병합기에 묶는다.
+	_d3dDeviceContext->OMSetRenderTargets(1, &_renderTargetView, _depthStencilView);
+
 
 	// 08. 뷰포트 설정
+	
+	_screenViewport.TopLeftX = 0;
+	_screenViewport.TopLeftY = 0;
+	_screenViewport.Width = 1280.0f;
+	_screenViewport.Height = 800.0f;
+	_screenViewport.MinDepth = 0.0f;
+	_screenViewport.MaxDepth = 1.0f; //fps에서 멀어지면 안보이는 것과 같이 보이는 깊이의 정도를 정한다.
 
-	return false;
+	_d3dDeviceContext->RSSetViewports(1, &_screenViewport);
+	
+	return true;
 }
