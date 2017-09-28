@@ -24,9 +24,15 @@
     <ClCompile Include="GameSystem.cpp">
       <Filter>소스 파일\System</Filter>
     </ClCompile>
+    <ClCompile Include="GameTimer.cpp">
+      <Filter>소스 파일\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameSystem.h">
+      <Filter>소스 파일\System</Filter>
+    </ClInclude>
+    <ClInclude Include="GameTimer.h">
       <Filter>소스 파일\System</Filter>
     </ClInclude>
   </ItemGroup>

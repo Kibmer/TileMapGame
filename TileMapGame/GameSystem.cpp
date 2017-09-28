@@ -1,4 +1,5 @@
 #include "GameSystem.h"
+#include <string>
 
 // 첫번째 윈도우 핸들은 현제 나의 윈도우의 핸들이 넘어 오지 않을때가 있다.
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lparam) {
@@ -98,7 +99,9 @@ int GameSystem::Update() {
 	//	DispatchMessage(&msg);
 	//	}
 	//}
-
+	_gameTimer.Reset();
+	_secPerFrame = 1.0f / 60.0f;
+	_frameDuration = 0.0f;
 	while (WM_QUIT != msg.message) {
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
 			//윈도우 처리
@@ -107,18 +110,32 @@ int GameSystem::Update() {
 		}
 		else {
 			//게임 처리
+			_gameTimer.Update();
+			float deltaTime = _gameTimer.GetDeltaTime();
+			/*wchar_t timeCheck[256];
+			swprintf(timeCheck, L"delta time %f\n", deltaTime);
+			OutputDebugString(timeCheck);*/
 
-			float color[4];
-			color[0] = 0.0f; //red
-			color[1] = 0.0f; //green
-			color[2] = 1.0f; //blue
-			color[3] = 1.0f; //alpha
+			_frameDuration += deltaTime;
+			if (_secPerFrame <= _frameDuration) {
+				// todo : 게임 관련된 드로우
+				wchar_t timeCheck[256];
+				swprintf(timeCheck, L"frameDuration %f\n", _frameDuration);
+				OutputDebugString(timeCheck);
+				
+				_frameDuration = 0.0f;
 
-			_d3dDeviceContext->ClearRenderTargetView(_renderTargetView, color);
-			_d3dDeviceContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+				float color[4];
+				color[0] = 0.0f; //red
+				color[1] = 0.0f; //green
+				color[2] = 1.0f; //blue
+				color[3] = 1.0f; //alpha
 
-			// todo : 게임 관련된 드로우
-			_swapChain->Present(0, 0);
+				_d3dDeviceContext->ClearRenderTargetView(_renderTargetView, color);
+				_d3dDeviceContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+				_swapChain->Present(0, 0);
+			}
 		}
 	}
 	return (int)msg.wParam; //문제가 있는지 없는지를 메세지에서 받는다.

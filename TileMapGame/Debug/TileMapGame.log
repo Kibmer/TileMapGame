@@ -55,5 +55,7 @@ c:\users\atents\desktop\tilemapgame\tilemapgame\sdk\include\d3d10.h(608): warnin
   c:\program files (x86)\windows kits\10\include\10.0.15063.0\shared\winerror.h(53376): note: 'D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS'의 이전 정의를 참조하십시오.
 c:\users\atents\desktop\tilemapgame\tilemapgame\sdk\include\d3d10.h(609): warning C4005: 'D3D10_ERROR_FILE_NOT_FOUND': 매크로 재정의
   c:\program files (x86)\windows kits\10\include\10.0.15063.0\shared\winerror.h(53385): note: 'D3D10_ERROR_FILE_NOT_FOUND'의 이전 정의를 참조하십시오.
+c:\users\atents\desktop\tilemapgame\tilemapgame\tilemapgame\gamesystem.cpp(123): warning C4996: 'swprintf': function has been changed to conform with the ISO C standard, adding an extra character count parameter. To use the traditional Microsoft version, set _CRT_NON_CONFORMING_SWPRINTFS.
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\corecrt_wstdio.h(1822): note: 'swprintf' 선언을 참조하십시오.
   TileMapGame.vcxproj -> C:\Users\atents\Desktop\TileMapGame\TileMapGame\Debug\TileMapGame.exe
   TileMapGame.vcxproj -> C:\Users\atents\Desktop\TileMapGame\TileMapGame\Debug\TileMapGame.pdb (Partial PDB)
