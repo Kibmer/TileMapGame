@@ -1,8 +1,12 @@
 #pragma once
 
 #include <Windows.h>
-#include <d3dx11.h>
+//#include <d3dx11.h>
+#include <d3dx9.h>
 #include "GameTimer.h"
+
+#define RELEASE_COM(x){if(NULL!=x){x->Release(); x=NULL;}}
+#define SAFE_DELETE(x){if(x){delete x; x=NULL;}}
 
 class GameSystem {
 private:
@@ -23,7 +27,11 @@ public:
 	int Update();
 
 private:
-	ID3D11Device* _d3dDevice;
+	int _clientWidth = 1280;
+	int _clientHeight = 800;
+
+private:
+	/*ID3D11Device* _d3dDevice;
 	ID3D11DeviceContext* _d3dDeviceContext;
 
 	IDXGISwapChain* _swapChain;
@@ -33,12 +41,17 @@ private:
 	ID3D11Texture2D* _depthStencilBuffer;
 	ID3D11DepthStencilView* _depthStencilView;
 
-	D3D11_VIEWPORT _screenViewport;
+	D3D11_VIEWPORT _screenViewport;*/
+
+	LPDIRECT3DDEVICE9 _device3d;
+	LPD3DXSPRITE _sprite;
 
 	UINT _4xMsaaQuallity;
 
-	bool _isEnable4xMsaa;
+	//bool _isEnable4xMsaa;
 	HWND _hMainWnd;
+
+	bool _isFullScreen;
 
 private:
 	GameTimer _gameTimer;

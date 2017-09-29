@@ -24,11 +24,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lparam) {
 GameSystem* GameSystem::_instance = NULL;
 
 GameSystem::GameSystem(){
-	_isEnable4xMsaa = false;
+	//_isEnable4xMsaa = false;
+	_isFullScreen = false;
 }
 
 GameSystem::~GameSystem(){
-	_swapChain->Release();
+	/*_swapChain->Release();
 	_swapChain = 0;
 
 	_d3dDeviceContext->Release();
@@ -44,7 +45,9 @@ GameSystem::~GameSystem(){
 	_depthStencilBuffer = 0;
 
 	_depthStencilView->Release();
-	_depthStencilView = 0;
+	_depthStencilView = 0;*/
+	RELEASE_COM(_device3d);
+	RELEASE_COM(_sprite);
 }
 
 // Singleton
@@ -73,7 +76,38 @@ bool GameSystem::InitSystem(HINSTANCE hInstance, int nCmdShow) {
 		return false;
 	}
 
-	_hMainWnd = CreateWindow(L"Base", L"Title", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
+	DWORD style;
+	if (_isFullScreen) {
+		style = WS_EX_TOPMOST | WS_VISIBLE | WS_POPUP;
+	}
+	else {
+		style = WS_OVERLAPPEDWINDOW;
+	}
+
+	_hMainWnd = CreateWindow(
+		L"Base", 
+		L"Title", 
+		WS_OVERLAPPEDWINDOW, 
+		CW_USEDEFAULT, CW_USEDEFAULT, 
+		CW_USEDEFAULT, CW_USEDEFAULT, 
+		0, 
+		0, 
+		hInstance, 
+		0);
+
+	if (false == _isFullScreen) {
+		RECT clientRect;
+		GetClientRect(_hMainWnd, &clientRect);
+
+		int addWidth = _clientWidth - clientRect.right;
+		int addHeight = _clientHeight - clientRect.bottom;
+		int finalWidth = _clientWidth + addWidth;
+		int finalHeigth = _clientHeight + addHeight;
+		MoveWindow(_hMainWnd,
+			0,
+			0,
+			finalWidth, finalHeigth, TRUE);
+	}
 
 	ShowWindow(_hMainWnd, nCmdShow);
 	UpdateWindow(_hMainWnd);
@@ -125,7 +159,7 @@ int GameSystem::Update() {
 				
 				_frameDuration = 0.0f;
 
-				float color[4];
+				/*float color[4];
 				color[0] = 0.0f; //red
 				color[1] = 0.0f; //green
 				color[2] = 1.0f; //blue
@@ -134,7 +168,16 @@ int GameSystem::Update() {
 				_d3dDeviceContext->ClearRenderTargetView(_renderTargetView, color);
 				_d3dDeviceContext->ClearDepthStencilView(_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-				_swapChain->Present(0, 0);
+				_swapChain->Present(0, 0);*/
+				_device3d->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 255, 100), 0.0f, 0);
+				_device3d->BeginScene();
+
+				_sprite->Begin(0);
+
+				_sprite->End();
+
+				_device3d->EndScene();
+				_device3d->Present(NULL, NULL, NULL, NULL);
 			}
 		}
 	}
@@ -142,7 +185,7 @@ int GameSystem::Update() {
 }
 
 bool GameSystem::InitDirect3D() {
-	D3D_FEATURE_LEVEL featureLevel;
+	/*D3D_FEATURE_LEVEL featureLevel;
 
 	HRESULT hr = D3D11CreateDevice(
 		0,
@@ -308,7 +351,57 @@ bool GameSystem::InitDirect3D() {
 	_screenViewport.MinDepth = 0.0f;
 	_screenViewport.MaxDepth = 1.0f; //fps에서 멀어지면 안보이는 것과 같이 보이는 깊이의 정도를 정한다.
 
-	_d3dDeviceContext->RSSetViewports(1, &_screenViewport);
+	_d3dDeviceContext->RSSetViewports(1, &_screenViewport);*/
+
+	LPDIRECT3D9 direct3d = Direct3DCreate9(D3D_SDK_VERSION);
+	if (FAILED(direct3d)) {
+		MessageBox(0, L"Direct3DCreate9 Failed", 0, 0);
+		return false;
+	}
+
 	
+	D3DPRESENT_PARAMETERS d3dpp;
+	ZeroMemory(&d3dpp, sizeof(d3dpp));
+	d3dpp.BackBufferWidth = _clientWidth;
+	d3dpp.BackBufferHeight = _clientHeight;
+	if (_isFullScreen) {
+		d3dpp.BackBufferFormat = D3DFMT_X8R8G8B8;
+	}
+	else {
+		d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+	}
+
+	d3dpp.BackBufferCount = 1;
+	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	d3dpp.hDeviceWindow = _hMainWnd;
+	d3dpp.Windowed = (!_isFullScreen);
+	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+	
+	D3DCAPS9 caps; //하드웨어 성능을 검사
+	HRESULT hr = direct3d->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps); //하드웨어 가속이 가능한지 판단
+	if (FAILED(hr)) {
+		MessageBox(0, L"GetDeviceCaps Failed", 0, 0);
+		return false;
+	}
+	DWORD behavior;
+	if ((caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) == 0 ||
+		(caps.VertexShaderVersion < D3DVS_VERSION(1, 1))) {
+		behavior = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+	}
+	else {
+		behavior = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+	}
+
+	hr = direct3d->CreateDevice(D3DADAPTER_DEFAULT,
+		D3DDEVTYPE_HAL, _hMainWnd, behavior, &d3dpp, &_device3d);
+	if (FAILED(hr)) {
+		MessageBox(0, L"CreateDevice Failed", 0, 0);
+	}
+
+	hr = D3DXCreateSprite(_device3d, &_sprite);
+	if (FAILED(hr)) {
+		MessageBox(0, L"D3DXCreateSprite Failed", 0, 0);
+	}
+
 	return true;
 }
